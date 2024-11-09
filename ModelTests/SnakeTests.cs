@@ -16,7 +16,7 @@ namespace ModelTests
         }
 
         [TestMethod]
-        public void UpdateJson_BasicInputs_Pass()
+        public void UpdateJson_CopySnake_Pass()
         {
             List<Point2D> body = [new Point2D(0, 0), new Point2D(10, 0)];
             List<Point2D> body2 = [new Point2D(-21, 7), new Point2D(5, 8), new Point2D(32, 9)];
@@ -28,7 +28,21 @@ namespace ModelTests
 
             snake2.UpdateJson(json);
 
-            Assert.AreEqual("{'snake':2,'name':'Giardia','body':[{'X':0,'Y':0},{'X':10,'Y':0}],'dir':{'X':1,'Y':0},'score':0,'died':false,'alive':true,'dc':false,'join':false}", Regex.Replace(snake2.GetJson(), @"[\r\n\s\\]", "").Replace("\"", "'"));
+            Assert.AreEqual("{'snake':3,'name':'Bingus','body':[{'X':0,'Y':0},{'X':10,'Y':0}],'dir':{'X':1,'Y':0},'score':0,'died':false,'alive':true,'dc':false,'join':false}", Regex.Replace(snake2.GetJson(), @"[\r\n\s\\]", "").Replace("\"", "'"));
+        }
+
+        [TestMethod]
+        public void UpdateJson_BasicInputs_Pass()
+        {
+            List<Point2D> body = [new Point2D(5, 0), new Point2D(10, 0)];
+
+            Snakes snake = new(0, "Ekans", body, new Point2D(1, 0));
+
+            string jsonUpdateFormat = "{'snake':0,'name':'Ekans','body':[{'X':6,'Y':0},{'X':10,'Y':0},{'X':10,'Y':2}],'dir':{'X':0,'Y':1},'score':1,'died':false,'alive':true,'dc':false,'join':true}";
+            string jsonUpdate = "{\"snake\":0,\"name\":\"Ekans\",\"body\":[{\"X\":6,\"Y\":0},{\"X\":10,\"Y\":0},{\"X\":10,\"Y\":2}],\"dir\":{\"X\":0,\"Y\":1},\"score\":1,\"died\":false,\"alive\":true,\"dc\":false,\"join\":true}";
+            snake.UpdateJson(jsonUpdate);
+
+            Assert.AreEqual(jsonUpdateFormat, Regex.Replace(snake.GetJson(), @"[\r\n\s\\]", "").Replace("\"", "'"));
         }
     }
 }

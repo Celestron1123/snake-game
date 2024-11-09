@@ -14,56 +14,56 @@ namespace GUI.Client.Models
         /// <summary>
         ///     The snake's unique ID
         /// </summary>
-        public int snake { get; private set; }
+        public int snake { get; set; }
 
         /// <summary>
         ///     The username of the snake
         /// </summary>
-        public string name { get; private set; }
+        public string name { get; set; }
 
         /// <summary>
         ///     A list of points representing the shape
         ///     and position of the snake
         /// </summary>
-        public List<Point2D> body { get; private set; }
+        public List<Point2D> body { get; set; }
 
         /// <summary>
         ///     The orientation of the snake as a
         ///     2D vector
         /// </summary>
-        public Point2D dir { get; private set; }
+        public Point2D dir { get; set; }
 
         /// <summary>
         ///     The number of powerups eaten
         /// </summary>
-        public int score { get; private set; } = 0;
+        public int score { get; set; } = 0;
 
         /// <summary>
         ///     A bool telling if the snake is dead
         /// </summary>
-        public bool died { get; private set; } = false;
+        public bool died { get; set; } = false;
 
         /// <summary>
         ///     A bool telling if the snake is alive
         /// </summary>
-        public bool alive { get; private set; } = true;
+        public bool alive { get; set; } = true;
 
         /// <summary>
         ///     A bool telling if the user disconnected
         /// </summary>
-        public bool dc { get; private set; } = false;
+        public bool dc { get; set; } = false;
 
         /// <summary>
         ///     A bool telling if the user just joined
         /// </summary>
-        public bool join { get; private set; } = false;
+        public bool join { get; set; } = false;
 
         /// <summary>
         ///     JSON options settings
         /// </summary>
         private readonly JsonSerializerOptions options = new()
         {
-            WriteIndented = true,
+            WriteIndented = false,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
         };
 
@@ -80,7 +80,7 @@ namespace GUI.Client.Models
             died = false;
             alive = true;
             dc = false;
-            join = true;
+            join = false;
         }
 
         /// <summary>
@@ -111,11 +111,17 @@ namespace GUI.Client.Models
         /// </summary>
         public void UpdateJson(string json)
         {
-           // What to actually update:
-           // body, dir, score, died, alive, dc, join
+            Snakes? newSnake = JsonSerializer.Deserialize<Snakes>(json, options);
 
-            // wtf
-            this = JsonSerializer.Deserialize<Snakes>(json, options);
+            if (newSnake is not null)
+            {
+                this.body = newSnake.body;
+                this.dir = newSnake.dir;
+                this.score = newSnake.score;
+                this.died = newSnake.died;
+                this.dc = newSnake.dc;
+                this.join = newSnake.join;
+            }
         }
     }
 }
