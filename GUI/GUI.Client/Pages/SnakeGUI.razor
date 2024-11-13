@@ -20,34 +20,82 @@
     private Canvas2DContext context = null!;
     private IJSObjectReference jsModule = null!;
 
+    private Vector2 snakePosition = new Vector2(500, 500);
+    private Vector2 snakeDirection = new Vector2(1, 0);
+    private List<Vector2> snakeSegments = new List<Vector2> { new Vector2(500, 500) };
+    private Vector2 foodPosition = new Vector2(300, 300);
+    private int snakeLength = 5;
+    private bool isGameRunning = true;
 
 
-    protected override async Task OnAfterRenderAsync( bool firstRender )
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if ( firstRender )
+        if (firstRender)
         {
-            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>( "import", "./Pages/SnakeGUI.razor.js" );
+            jsModule = await JsRuntime.InvokeAsync<IJSObjectReference>("import", "./Pages/SnakeGUI.razor.js");
             context = await canvasReference.CreateCanvas2DAsync();
-            await JsRuntime.InvokeAsync<object>( "initRenderJS", DotNetObjectReference.Create( this ) );           
+            await JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
 
             // TODO: Start the game loop
 
-            
+            _ = GameLoop();
+
+        }
+    }
+
+    private async Task GameLoop()
+    {
+        while (isGameRunning)
+        {
+            UpdateGame();
+            await RenderGame();
+            await Task.Delay(100);
+        }
+    }
+
+    private void UpdateGame()
+    {
+
+    }
+
+
+
+    private async Task RenderGame()
+    {
+        await context.ClearRectAsync(0, 0, 1000, 1000);
+
+        //Call the method to draw snake
+        foreach (var segment in snakeSegments)
+        {
+            await context.BeginPathAsync();
+            await context.RectAsync(segment.X, segment.Y, 10, 10);
+            await context.SetFillStyleAsync("Blue");
+            await context.FillAsync();
+            await context.ClosePathAsync();
         }
     }
 
 
-
     [JSInvokable]
-    public void HandleKeyPress( string key )
+    public void HandleKeyPress(string key)
     {
-        // TODO: Once the client is connected and the handshake is complete,
-        //       invoke some controller method to send the appropriate command to the server
+        // Change snake direction based on key press
+        switch (key)
+        {
+            case "ArrowUp":
+                if (snakeDirection != new Vector2(0, 1)) snakeDirection = new Vector2(0, -1);
+                break;
+            case "ArrowDown":
+                if (snakeDirection != new Vector2(0, -1)) snakeDirection = new Vector2(0, 1);
+                break;
+            case "ArrowLeft":
+                if (snakeDirection != new Vector2(1, 0)) snakeDirection = new Vector2(-1, 0);
+                break;
+            case "ArrowRight":
+                if (snakeDirection != new Vector2(-1, 0)) snakeDirection = new Vector2(1, 0);
+                break;
+        }
 
-
-        // TODO: Remove this, which is just here to show you what the 'key' string is for whatever key you pressed
         Debug.WriteLine("key pressed: " + key);
     }
-
 }
-
