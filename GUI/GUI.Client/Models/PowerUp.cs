@@ -6,6 +6,9 @@ using System.Text.Json;
 
 namespace GUI.Client.Models
 {
+    /// <summary>
+    /// Class for the powerup.
+    /// </summary>
     public class PowerUp
     {
         
@@ -55,7 +58,21 @@ namespace GUI.Client.Models
             died = false;
         }
 
+        /// <summary>
+        ///     Updates the powerup object with the given json string.
+        /// </summary>
+        /// <param name="json"></param>
+        public void updateJSon(string json)
+        {
+            PowerUp? powerUp = JsonSerializer.Deserialize<PowerUp>(json, options);
 
+            if(powerUp is not null)
+            {
+                power = powerUp.power;
+                loc = powerUp.loc;
+                died = powerUp.died;
+            }
+        }
 
 
     }
