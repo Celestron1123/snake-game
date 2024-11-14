@@ -1,4 +1,4 @@
-﻿@page "/snake"
+@page "/snake"
 @rendermode InteractiveServer
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas
@@ -6,9 +6,17 @@
 @using System.Numerics
 @using System.Diagnostics
 @using System.Text.Json
+@using CS3500.Networking;
+@using GUI.Client.Models;
+@using GUI.Client;
 @inject IJSRuntime JsRuntime;
 
 <PageTitle> Snake </PageTitle>
+
+<img @ref="backgroundImage" id="bgImage" src="images/Background.png" alt="image" style="display:none;" />
+<img @ref="wallImage" id="wlImage" src="images/WallSprite.png" alt="image" style="display:none;" />
+<img @ref="powerImage" id="pwImage" src="images/powerApple.png" alt="image" style="display:none;" />
+
 
 <div id="snakeCanvas" style="position: fixed; width: 100%; height: 100%">
     <BECanvas Width="1000" Height="1000" @ref="canvasReference"></BECanvas>
@@ -20,13 +28,27 @@
     private Canvas2DContext context = null!;
     private IJSObjectReference jsModule = null!;
 
-    private Vector2 snakePosition = new Vector2(500, 500);
-    private Vector2 snakeDirection = new Vector2(1, 0);
-    private List<Vector2> snakeSegments = new List<Vector2> { new Vector2(500, 500) };
-    private Vector2 foodPosition = new Vector2(300, 300);
-    private int snakeLength = 5;
-    private bool isGameRunning = true;
+    private NetworkConnection connection = new();
+    private World snakeSpace;
+    private int myID;
 
+    /// <summary>
+    ///     C# reference to the html element for the background image
+    /// </summary>
+    private ElementReference backgroundImage;
+
+    private ElementReference wallImage;
+    private ElementReference powerImage;
+
+    /// <summary>
+    /// Width of the display canvas
+    /// </summary>
+    private const int ViewWidth = 1000;
+
+    /// <summary>
+    /// Height of the display canvas
+    /// </summary>
+    private const int ViewHeight = 1000;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -36,45 +58,166 @@
             context = await canvasReference.CreateCanvas2DAsync();
             await JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
 
-            // TODO: Start the game loop
+            connection.Connect("localhost", 11000);
+            connection.Send("bingus");
+            myID = int.Parse(connection.ReadLine());
+            string worldSize = connection.ReadLine();
+            snakeSpace = new(int.Parse(worldSize));
 
-            _ = GameLoop();
-
+            new Thread(() => NetworkLoop()).Start();
+            GameLoop();
         }
     }
 
-    private async Task GameLoop()
+    private void NetworkLoop()
     {
-        while (isGameRunning)
+        while (true)
         {
-            UpdateGame();
-            await RenderGame();
-            await Task.Delay(100);
+            string update;
+
+            update = connection.ReadLine();
+
+            if (update[2] == 'w')
+            {
+                Walls wall = new();
+                wall.UpdateJson(update);
+                snakeSpace.Walls.Add(wall.wall, wall);
+            }
+            else if (update[2] == 's')
+            {
+                if (snakeSpace.Snakes.ContainsKey(int.Parse("" + update[9])))
+                {
+                    snakeSpace.Snakes[int.Parse("" + update[9])].UpdateJson(update);
+                }
+                else
+                {
+                    Snakes snake = new();
+                    snake.UpdateJson(update);
+                    snakeSpace.Snakes.Add(snake.snake, snake);
+                }
+            }
+            else if (update[2] == 'p')
+            {
+                if (snakeSpace.PowerUps.ContainsKey(int.Parse("" + update[9])))
+                {
+                    snakeSpace.PowerUps[int.Parse("" + update[9])].UpdateJson(update);
+                }
+                else
+                {
+                    PowerUp power = new();
+                    power.UpdateJson(update);
+                    snakeSpace.PowerUps.Add(power.power, power);
+                }
+            }
         }
     }
 
-    private void UpdateGame()
+    private async void GameLoop()
     {
-
+        while (true)
+        {
+            await DrawFrame();
+        }
     }
 
-
-
-    private async Task RenderGame()
+    private async Task DrawFrame()
     {
-        await context.ClearRectAsync(0, 0, 1000, 1000);
+        await context.BeginBatchAsync();
+        // clip the view so that objects drawn outside the canvas will not be shown
+        await context.BeginPathAsync();
+        await context.RectAsync(0, 0, ViewWidth, ViewHeight);
+        await context.ClipAsync();
 
-        //Call the method to draw snake
-        foreach (var segment in snakeSegments)
+        // Because we are modifying the transformation matrix, we need to save it so we can restore it at the end
+        await context.SaveAsync();
+
+
+        // Center on origin, move to center of view port
+        await context.TranslateAsync(ViewWidth / 2, ViewHeight / 2);
+        try
         {
+            Snakes mySnake = snakeSpace.Snakes[myID];
+            await context.TranslateAsync(-mySnake.body.Last().X, -mySnake.body.Last().Y);
+        }
+        catch (Exception)
+        {
+            await context.TranslateAsync(0, 0);
+        }
+
+    // Draw the background:
+    await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
+
+        // Draw everything else:
+        World copyWorld;
+        lock (snakeSpace)
+        {
+            copyWorld = new(snakeSpace);
+        }
+
+        foreach (Snakes snek in copyWorld.Snakes.Values)
+        {
+            await context.SetLineWidthAsync(10);
             await context.BeginPathAsync();
-            await context.RectAsync(segment.X, segment.Y, 10, 10);
-            await context.SetFillStyleAsync("Blue");
-            await context.FillAsync();
-            await context.ClosePathAsync();
+
+            // Move to the first segment
+            Point2D firstSegment = snek.body.First();
+            await context.MoveToAsync(firstSegment.X, firstSegment.Y);
+
+            // Draw lines to each subsequent segment
+            foreach (Point2D segment in snek.body.Skip(1))
+            {
+                await context.LineToAsync(segment.X, segment.Y);
+            }
+
+            await context.StrokeAsync();
         }
+
+        foreach (Walls wall in copyWorld.Walls.Values)
+        {
+            double distance = Math.Sqrt(Math.Pow(wall.p2.X - wall.p1.X, 2) + Math.Pow(wall.p2.Y - wall.p1.Y, 2));
+            double angle = Math.Atan2(wall.p2.Y - wall.p1.Y, wall.p2.X - wall.p1.X);
+
+            for (double i = 0; i < distance; i += 50)
+            {
+                double x = wall.p1.X + i * Math.Cos(angle);
+                double y = wall.p1.Y + i * Math.Sin(angle);
+                await context.DrawImageAsync(wallImage, x, y, 50, 50);
+            }
+        }
+
+        foreach (PowerUp powerup in copyWorld.PowerUps.Values)
+        {
+            await context.DrawImageAsync(powerImage, powerup.loc.X, powerup.loc.Y, 16, 16);
+        }
+
+        await context.RestoreAsync();
+        await context.EndBatchAsync();
+
     }
 
-
-
+    [JSInvokable]
+    public void HandleKeyPress(string key)
+    {
+        // TODO: Once the client is connected and the handshake is complete,
+        //       invoke some controller method to send the appropriate command to the server
+        
+        // This is Elijahs old code for handling turns. Should go in network handler
+                                            
+        //if (key == "w")
+        //{
+        //    connection.Send("{\"moving\":\"up\"}");
+        //}
+        //if (key == "s")
+        //{
+        //    connection.Send("{\"moving\":\"down\"}");
+        //}
+        //if (key == "a")
+        //{
+        //   connection.Send("{\"moving\":\"left\"}");
+        //}
+        //if (key == "d")
+        //{
+        //    connection.Send("{\"moving\":\"right\"}");
+        //}
+    }
 }
