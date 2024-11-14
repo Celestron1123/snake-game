@@ -15,6 +15,8 @@
 
 <img @ref="backgroundImage" id="bgImage" src="images/Background.png" alt="image" style="display:none;" />
 <img @ref="wallImage" id="wlImage" src="images/WallSprite.png" alt="image" style="display:none;" />
+<img @ref="powerImage" id="pwImage" src="images/powerApple.png" alt="image" style="display:none;" />
+
 
 <div id="snakeCanvas" style="position: fixed; width: 100%; height: 100%">
     <BECanvas Width="1000" Height="1000" @ref="canvasReference"></BECanvas>
@@ -28,7 +30,7 @@
 
     private NetworkConnection connection = new();
     private World snakeSpace;
-    private Snakes me;
+    private int myID;
 
     /// <summary>
     ///     C# reference to the html element for the background image
@@ -36,6 +38,7 @@
     private ElementReference backgroundImage;
 
     private ElementReference wallImage;
+    private ElementReference powerImage;
 
     /// <summary>
     /// Width of the display canvas
@@ -57,9 +60,7 @@
 
             connection.Connect("localhost", 11000);
             connection.Send("bingus");
-            me = new();
-            string snakeID = connection.ReadLine();
-            me.snake = int.Parse(snakeID);
+            myID = int.Parse(connection.ReadLine());
             string worldSize = connection.ReadLine();
             snakeSpace = new(int.Parse(worldSize));
 
@@ -95,17 +96,17 @@
                     snakeSpace.Snakes.Add(snake.snake, snake);
                 }
             }
-            else if (update[2] == 's')
+            else if (update[2] == 'p')
             {
-                if (snakeSpace.Snakes.ContainsKey(int.Parse("" + update[9])))
+                if (snakeSpace.PowerUps.ContainsKey(int.Parse("" + update[9])))
                 {
-                    snakeSpace.Snakes[int.Parse("" + update[9])].UpdateJson(update);
+                    snakeSpace.PowerUps[int.Parse("" + update[9])].UpdateJson(update);
                 }
                 else
                 {
-                    Snakes snake = new();
-                    snake.UpdateJson(update);
-                    snakeSpace.Snakes.Add(snake.snake, snake);
+                    PowerUp power = new();
+                    power.UpdateJson(update);
+                    snakeSpace.PowerUps.Add(power.power, power);
                 }
             }
         }
@@ -135,16 +136,16 @@
         await context.TranslateAsync(ViewWidth / 2, ViewHeight / 2);
         try
         {
-            await context.TranslateAsync(-me.body.Last().X, -me.body.Last().Y);
-
+            Snakes mySnake = snakeSpace.Snakes[myID];
+            await context.TranslateAsync(-mySnake.body.Last().X, -mySnake.body.Last().Y);
         }
         catch (Exception)
         {
             await context.TranslateAsync(0, 0);
         }
 
-        // Draw the background:
-        await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
+    // Draw the background:
+    await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
 
         // Draw everything else:
         World copyWorld;
@@ -166,7 +167,6 @@
             foreach (Point2D segment in snek.body.Skip(1))
             {
                 await context.LineToAsync(segment.X, segment.Y);
-                Console.WriteLine("Drawn to: " + segment.X + segment.Y);
             }
 
             await context.StrokeAsync();
@@ -183,6 +183,11 @@
                 double y = wall.p1.Y + i * Math.Sin(angle);
                 await context.DrawImageAsync(wallImage, x, y, 50, 50);
             }
+        }
+
+        foreach (PowerUp powerup in copyWorld.PowerUps.Values)
+        {
+            await context.DrawImageAsync(powerImage, powerup.loc.X, powerup.loc.Y, 20, 20);
         }
 
         await context.RestoreAsync();

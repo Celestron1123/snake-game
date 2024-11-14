@@ -11,7 +11,7 @@ namespace GUI.Client.Models
     /// </summary>
     public class PowerUp
     {
-        
+
         /// <summary>
         /// This is the id of the powerup.
         /// </summary>
@@ -42,7 +42,7 @@ namespace GUI.Client.Models
         public PowerUp()
         {
             power = 0;
-            loc = new Point2D(0,0);
+            loc = new Point2D(0, 0);
             died = false;
         }
 
@@ -62,11 +62,11 @@ namespace GUI.Client.Models
         ///     Updates the powerup object with the given json string.
         /// </summary>
         /// <param name="json"></param>
-        public void updateJSon(string json)
+        public void UpdateJson(string json)
         {
             PowerUp? powerUp = JsonSerializer.Deserialize<PowerUp>(json, options);
 
-            if(powerUp is not null)
+            if (powerUp is not null)
             {
                 power = powerUp.power;
                 loc = powerUp.loc;
