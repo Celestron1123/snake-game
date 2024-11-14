@@ -165,7 +165,6 @@
             foreach (Point2D segment in snek.body.Skip(1))
             {
                 await context.LineToAsync(segment.X, segment.Y);
-                Console.WriteLine("Drawing snek");
             }
 
             await context.StrokeAsync();
@@ -181,10 +180,26 @@
     {
         // TODO: Once the client is connected and the handshake is complete,
         //       invoke some controller method to send the appropriate command to the server
+        if (key == "w")
+        {
+            connection.Send("{\"moving\":\"up\"}");
+        }
+        if (key == "s")
+        {
+            connection.Send("{\"moving\":\"down\"}");
+        }
+        if (key == "a")
+        {
+            connection.Send("{\"moving\":\"left\"}");
+        }
+        if (key == "d")
+        {
+            connection.Send("{\"moving\":\"right\"}");
+        }
 
 
         // TODO: Remove this, which is just here to show you what the 'key' string is for whatever key you pressed
-        Debug.WriteLine("key pressed: " + key);
+        Console.WriteLine("key pressed: " + key);
     }
 
 }
