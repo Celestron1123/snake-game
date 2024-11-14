@@ -76,26 +76,5 @@
     }
 
 
-    [JSInvokable]
-    public void HandleKeyPress(string key)
-    {
-        // Change snake direction based on key press
-        switch (key)
-        {
-            case "ArrowUp":
-                if (snakeDirection != new Vector2(0, 1)) snakeDirection = new Vector2(0, -1);
-                break;
-            case "ArrowDown":
-                if (snakeDirection != new Vector2(0, -1)) snakeDirection = new Vector2(0, 1);
-                break;
-            case "ArrowLeft":
-                if (snakeDirection != new Vector2(1, 0)) snakeDirection = new Vector2(-1, 0);
-                break;
-            case "ArrowRight":
-                if (snakeDirection != new Vector2(-1, 0)) snakeDirection = new Vector2(1, 0);
-                break;
-        }
 
-        Debug.WriteLine("key pressed: " + key);
-    }
 }
