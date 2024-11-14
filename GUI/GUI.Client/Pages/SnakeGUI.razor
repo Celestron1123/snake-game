@@ -1,4 +1,4 @@
-﻿@page "/snake"
+@page "/snake"
 @rendermode InteractiveServer
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas
@@ -200,26 +200,24 @@
     {
         // TODO: Once the client is connected and the handshake is complete,
         //       invoke some controller method to send the appropriate command to the server
-        if (key == "w")
-        {
-            connection.Send("{\"moving\":\"up\"}");
-        }
-        if (key == "s")
-        {
-            connection.Send("{\"moving\":\"down\"}");
-        }
-        if (key == "a")
-        {
-            connection.Send("{\"moving\":\"left\"}");
-        }
-        if (key == "d")
-        {
-            connection.Send("{\"moving\":\"right\"}");
-        }
-
-
-        // TODO: Remove this, which is just here to show you what the 'key' string is for whatever key you pressed
-        Console.WriteLine("key pressed: " + key);
+        
+        // This is Elijahs old code for handling turns. Should go in network handler
+                                            
+        //if (key == "w")
+        //{
+        //    connection.Send("{\"moving\":\"up\"}");
+        //}
+        //if (key == "s")
+        //{
+        //    connection.Send("{\"moving\":\"down\"}");
+        //}
+        //if (key == "a")
+        //{
+        //   connection.Send("{\"moving\":\"left\"}");
+        //}
+        //if (key == "d")
+        //{
+        //    connection.Send("{\"moving\":\"right\"}");
+        //}
     }
-
 }
