@@ -6,9 +6,14 @@
 @using System.Numerics
 @using System.Diagnostics
 @using System.Text.Json
+@using CS3500.Networking;
+@using GUI.Client.Models;
+@using GUI.Client;
 @inject IJSRuntime JsRuntime;
 
 <PageTitle> Snake </PageTitle>
+
+<img @ref="backgroundImage" id="bgImage" src="images/Background.png" alt="image" style="display:none;" />
 
 <div id="snakeCanvas" style="position: fixed; width: 100%; height: 100%">
     <BECanvas Width="1000" Height="1000" @ref="canvasReference"></BECanvas>
@@ -20,13 +25,24 @@
     private Canvas2DContext context = null!;
     private IJSObjectReference jsModule = null!;
 
-    private Vector2 snakePosition = new Vector2(500, 500);
-    private Vector2 snakeDirection = new Vector2(1, 0);
-    private List<Vector2> snakeSegments = new List<Vector2> { new Vector2(500, 500) };
-    private Vector2 foodPosition = new Vector2(300, 300);
-    private int snakeLength = 5;
-    private bool isGameRunning = true;
+    private NetworkConnection connection = new();
+    private World snakeSpace;
+    private Snakes me;
 
+    /// <summary>
+    ///     C# reference to the html element for the background image
+    /// </summary>
+    private ElementReference backgroundImage;
+
+    /// <summary>
+    /// Width of the display canvas
+    /// </summary>
+    private const int ViewWidth = 1000;
+
+    /// <summary>
+    /// Height of the display canvas
+    /// </summary>
+    private const int ViewHeight = 1000;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -36,66 +52,139 @@
             context = await canvasReference.CreateCanvas2DAsync();
             await JsRuntime.InvokeAsync<object>("initRenderJS", DotNetObjectReference.Create(this));
 
-            // TODO: Start the game loop
+            connection.Connect("localhost", 11000);
+            connection.Send("bingus");
+            me = new();
+            string snakeID = connection.ReadLine();
+            me.snake = int.Parse(snakeID);
+            string worldSize = connection.ReadLine();
+            snakeSpace = new(int.Parse(worldSize));
 
-            _ = GameLoop();
-
+            // _ = Task.Run(() => NetworkLoop());
+            new Thread(() => NetworkLoop()).Start();
+            // _ = Task.Run(() => GameLoop());
+            GameLoop();
         }
     }
 
-    private async Task GameLoop()
+    private void NetworkLoop()
     {
-        while (isGameRunning)
+        while (true)
         {
-            UpdateGame();
-            await RenderGame();
-            await Task.Delay(100);
+            string update;
+
+            update = connection.ReadLine();
+
+            if (update[2] == 'w')
+            {
+                Walls wall = new();
+                wall.UpdateJson(update);
+                snakeSpace.Walls.Add(wall.wall, wall);
+            }
+            else if (update[2] == 's')
+            {
+                if (snakeSpace.Snakes.ContainsKey(int.Parse("" + update[9])))
+                {
+                    snakeSpace.Snakes[int.Parse("" + update[9])].UpdateJson(update);
+                }
+                else
+                {
+                    Snakes snake = new();
+                    snake.UpdateJson(update);
+                    snakeSpace.Snakes.Add(snake.snake, snake);
+                }
+            }
+            else if (update[2] == 's')
+            {
+                if (snakeSpace.Snakes.ContainsKey(int.Parse("" + update[9])))
+                {
+                    snakeSpace.Snakes[int.Parse("" + update[9])].UpdateJson(update);
+                }
+                else
+                {
+                    Snakes snake = new();
+                    snake.UpdateJson(update);
+                    snakeSpace.Snakes.Add(snake.snake, snake);
+                }
+            }
         }
     }
 
-    private void UpdateGame()
+    private async void GameLoop()
     {
-
+        while (true)
+        {
+            await DrawFrame();
+        }
     }
 
-
-
-    private async Task RenderGame()
+    private async Task DrawFrame()
     {
-        await context.ClearRectAsync(0, 0, 1000, 1000);
+        await context.BeginBatchAsync();
+        // clip the view so that objects drawn outside the canvas will not be shown
+        await context.BeginPathAsync();
+        await context.RectAsync(0, 0, ViewWidth, ViewHeight);
+        await context.ClipAsync();
 
-        //Call the method to draw snake
-        foreach (var segment in snakeSegments)
+        // Because we are modifying the transformation matrix, we need to save it so we can restore it at the end
+        await context.SaveAsync();
+
+
+        // Center on origin, move to center of view port
+        await context.TranslateAsync(ViewWidth / 2, ViewHeight / 2);
+        try
         {
+            await context.TranslateAsync(-me.body.Last().X, -me.body.Last().Y);
+
+        }
+        catch (Exception)
+        {
+            await context.TranslateAsync(0, 0);
+        }
+
+        // Draw the background:
+        await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
+
+        // Draw everything else:
+        World copyWorld;
+        lock (snakeSpace)
+        {
+            copyWorld = new(snakeSpace);
+        }
+
+        foreach (Snakes snek in copyWorld.Snakes.Values)
+        {
+            await context.SetLineWidthAsync(5);
             await context.BeginPathAsync();
-            await context.RectAsync(segment.X, segment.Y, 10, 10);
-            await context.SetFillStyleAsync("Blue");
-            await context.FillAsync();
-            await context.ClosePathAsync();
-        }
-    }
 
+            // Move to the first segment
+            Point2D firstSegment = snek.body.First();
+            await context.MoveToAsync(firstSegment.X, firstSegment.Y);
+
+            // Draw lines to each subsequent segment
+            foreach (Point2D segment in snek.body.Skip(1))
+            {
+                await context.LineToAsync(segment.X, segment.Y);
+                Console.WriteLine("Drawing snek");
+            }
+
+            await context.StrokeAsync();
+        }
+
+        await context.RestoreAsync();
+        await context.EndBatchAsync();
+
+    }
 
     [JSInvokable]
     public void HandleKeyPress(string key)
     {
-        // Change snake direction based on key press
-        switch (key)
-        {
-            case "ArrowUp":
-                if (snakeDirection != new Vector2(0, 1)) snakeDirection = new Vector2(0, -1);
-                break;
-            case "ArrowDown":
-                if (snakeDirection != new Vector2(0, -1)) snakeDirection = new Vector2(0, 1);
-                break;
-            case "ArrowLeft":
-                if (snakeDirection != new Vector2(1, 0)) snakeDirection = new Vector2(-1, 0);
-                break;
-            case "ArrowRight":
-                if (snakeDirection != new Vector2(-1, 0)) snakeDirection = new Vector2(1, 0);
-                break;
-        }
+        // TODO: Once the client is connected and the handshake is complete,
+        //       invoke some controller method to send the appropriate command to the server
 
+
+        // TODO: Remove this, which is just here to show you what the 'key' string is for whatever key you pressed
         Debug.WriteLine("key pressed: " + key);
     }
+
 }

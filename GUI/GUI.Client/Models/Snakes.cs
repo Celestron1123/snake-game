@@ -115,10 +115,13 @@ namespace GUI.Client.Models
 
             if (newSnake is not null)
             {
+                this.snake = newSnake.snake;
+                this.name = newSnake.name;
                 this.body = newSnake.body;
                 this.dir = newSnake.dir;
                 this.score = newSnake.score;
                 this.died = newSnake.died;
+                this.alive = newSnake.alive;
                 this.dc = newSnake.dc;
                 this.join = newSnake.join;
             }
