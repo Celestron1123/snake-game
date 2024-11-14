@@ -14,6 +14,7 @@
 <PageTitle> Snake </PageTitle>
 
 <img @ref="backgroundImage" id="bgImage" src="images/Background.png" alt="image" style="display:none;" />
+<img @ref="wallImage" id="wlImage" src="images/WallSprite.png" alt="image" style="display:none;" />
 
 <div id="snakeCanvas" style="position: fixed; width: 100%; height: 100%">
     <BECanvas Width="1000" Height="1000" @ref="canvasReference"></BECanvas>
@@ -33,6 +34,8 @@
     ///     C# reference to the html element for the background image
     /// </summary>
     private ElementReference backgroundImage;
+
+    private ElementReference wallImage;
 
     /// <summary>
     /// Width of the display canvas
@@ -60,9 +63,7 @@
             string worldSize = connection.ReadLine();
             snakeSpace = new(int.Parse(worldSize));
 
-            // _ = Task.Run(() => NetworkLoop());
             new Thread(() => NetworkLoop()).Start();
-            // _ = Task.Run(() => GameLoop());
             GameLoop();
         }
     }
@@ -165,9 +166,23 @@
             foreach (Point2D segment in snek.body.Skip(1))
             {
                 await context.LineToAsync(segment.X, segment.Y);
+                Console.WriteLine("Drawn to: " + segment.X + segment.Y);
             }
 
             await context.StrokeAsync();
+        }
+
+        foreach (Walls wall in copyWorld.Walls.Values)
+        {
+            double distance = Math.Sqrt(Math.Pow(wall.p2.X - wall.p1.X, 2) + Math.Pow(wall.p2.Y - wall.p1.Y, 2));
+            double angle = Math.Atan2(wall.p2.Y - wall.p1.Y, wall.p2.X - wall.p1.X);
+
+            for (double i = 0; i < distance; i += 50)
+            {
+                double x = wall.p1.X + i * Math.Cos(angle);
+                double y = wall.p1.Y + i * Math.Sin(angle);
+                await context.DrawImageAsync(wallImage, x, y, 50, 50);
+            }
         }
 
         await context.RestoreAsync();
