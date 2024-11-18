@@ -1,4 +1,5 @@
 @page "/snake"
+@page "/snake"
 @rendermode InteractiveServer
 @using Blazor.Extensions
 @using Blazor.Extensions.Canvas
@@ -144,8 +145,8 @@
             await context.TranslateAsync(0, 0);
         }
 
-    // Draw the background:
-    await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
+        // Draw the background:
+        await context.DrawImageAsync(backgroundImage, -snakeSpace.Size / 2, -snakeSpace.Size / 2, snakeSpace.Size, snakeSpace.Size);
 
         // Draw everything else:
         World copyWorld;
@@ -200,24 +201,24 @@
     {
         // TODO: Once the client is connected and the handshake is complete,
         //       invoke some controller method to send the appropriate command to the server
-        
-        // This is Elijahs old code for handling turns. Should go in network handler
-                                            
-        //if (key == "w")
-        //{
-        //    connection.Send("{\"moving\":\"up\"}");
-        //}
-        //if (key == "s")
-        //{
-        //    connection.Send("{\"moving\":\"down\"}");
-        //}
-        //if (key == "a")
-        //{
-        //   connection.Send("{\"moving\":\"left\"}");
-        //}
-        //if (key == "d")
-        //{
-        //    connection.Send("{\"moving\":\"right\"}");
-        //}
+        if (key == "w")
+        {
+            connection.Send("{\"moving\":\"up\"}");
+        }
+        if (key == "s")
+        {
+            connection.Send("{\"moving\":\"down\"}");
+        }
+        if (key == "a")
+        {
+            connection.Send("{\"moving\":\"left\"}");
+        }
+        if (key == "d")
+        {
+            connection.Send("{\"moving\":\"right\"}");
+        }
+
+
     }
+
 }
