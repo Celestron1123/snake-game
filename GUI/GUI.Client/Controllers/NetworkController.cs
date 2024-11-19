@@ -106,20 +106,24 @@ namespace GUI.Client.Controllers
         /// <param name="key">The key that was pressed (should be 'w', 'a', 's', or 'd')</param>
         public void HandleKeyPress(string key)
         {
-            switch (key.ToLower())
+            if (_connection.IsConnected)
             {
-                case "w":
-                    _connection.Send("{\"moving\":\"up\"}");
-                    break;
-                case "s":
-                    _connection.Send("{\"moving\":\"down\"}");
-                    break;
-                case "a":
-                    _connection.Send("{\"moving\":\"left\"}");
-                    break;
-                case "d":
-                    _connection.Send("{\"moving\":\"right\"}");
-                    break;
+
+                switch (key.ToLower())
+                {
+                    case "w":
+                        _connection.Send("{\"moving\":\"up\"}");
+                        break;
+                    case "s":
+                        _connection.Send("{\"moving\":\"down\"}");
+                        break;
+                    case "a":
+                        _connection.Send("{\"moving\":\"left\"}");
+                        break;
+                    case "d":
+                        _connection.Send("{\"moving\":\"right\"}");
+                        break;
+                }
             }
         }
     }
