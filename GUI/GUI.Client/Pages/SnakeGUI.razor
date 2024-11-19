@@ -1,3 +1,6 @@
+<authors> Elijah Potter and Willy Ngo </authors>
+<date> November 19, 2024 </date>
+
 @page "/snake"
 @rendermode InteractiveServer
 @using Blazor.Extensions
@@ -24,9 +27,9 @@
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
 
     <input type="text"
-           @bind="username"
-           placeholder="Username"
-           style="padding: 10px 15px;
+    @bind="username"
+    placeholder="Username"
+    style="padding: 10px 15px;
                   border-radius: 8px;
                   border: none;
                   background-color: rgba(255,255,255,0.9);
@@ -34,9 +37,9 @@
                   width: 150px;" />
 
     <input type="number"
-           @bind="port"
-           placeholder="Port"
-           style="padding: 10px 15px;
+    @bind="port"
+    placeholder="Port"
+    style="padding: 10px 15px;
                   border-radius: 8px;
                   border: none;
                   background-color: rgba(255,255,255,0.9);
@@ -44,7 +47,7 @@
                   width: 120px;" />
 
     <button @onclick="Connect"
-            style="padding: 10px 25px;
+    style="padding: 10px 25px;
                    border-radius: 8px;
                    border: none;
                    background-color: #4CAF50;
@@ -203,6 +206,10 @@
         }
     }
 
+    /// <summary>
+    ///     Draws the actual game being run
+    /// </summary>
+    /// <returns></returns>
     private async Task DrawFrame()
     {
         if (snakeSpace == null) return;
@@ -238,6 +245,10 @@
         await context.EndBatchAsync();
     }
 
+    /// <summary>
+    ///     Draws the blurred world as a background
+    /// </summary>
+    /// <returns></returns>
     private async Task DrawEdgeBlur()
     {
         await context.DrawImageAsync(blurBackground, -snakeSpace!.Size, -snakeSpace.Size, snakeSpace.Size * 2, snakeSpace.Size * 2);

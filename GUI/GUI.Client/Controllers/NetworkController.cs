@@ -1,3 +1,6 @@
+// <authors> Elijah Potter and Willy Ngo </authors>
+// <date> November 19, 2024 </date>
+
 using System.Data;
 using System.Diagnostics;
 using CS3500.Networking;
