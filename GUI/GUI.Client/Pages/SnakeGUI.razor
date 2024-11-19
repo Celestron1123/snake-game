@@ -227,32 +227,16 @@
         }
 
         await DrawBackground();
-        await DrawEdgeBlur();
         await DrawWalls();
         await DrawSnakes();
         await DrawPowerups();
 
         await context.RestoreAsync();
         await context.EndBatchAsync();
+
+        StateHasChanged();
     }
 
-    private async Task DrawEdgeBlur()
-    {
-        if (snakeSpace == null) return;
-
-        // Calculate the view area that needs to be blurred
-        int blurSize = 50;
-        int left = -snakeSpace.Size / 2 - blurSize;
-        int right = snakeSpace.Size / 2 + blurSize;
-        int top = -snakeSpace.Size / 2 - blurSize;
-        int bottom = snakeSpace.Size / 2 + blurSize;
-
-        // Draw the blurred edge background
-        await context.BeginPathAsync();
-        await context.SetFillStyleAsync("rgba(0, 255, 0, 0.2)"); // Green with 20% opacity
-        await context.RectAsync(left, top, right - left, bottom - top);
-        await context.FillAsync();
-    }
     /// <summary>
     /// Draws the game background
     /// </summary>
@@ -308,6 +292,7 @@
                 }
             }
         }
+        StateHasChanged();
     }
     /// <summary>
     /// Draws all snakes in the game with simple scales
