@@ -75,8 +75,10 @@
 <img @ref="backgroundImage" src="images/Background.png" alt="background" style="display:none;" />
 <img @ref="wallImage" src="images/WallSprite.png" alt="wall" style="display:none;" />
 <img @ref="powerImage" src="images/powerApple.png" alt="power" style="display:none;" />
+<img @ref="blurBackground" src="images/BlurBackground.png" alt="blur" style="display:none;" />
 <audio @ref="eatSound" src="sounds/eat.mp3" style="display:none;"></audio>
 <audio @ref="crashSound" src="sounds/crash.mp3" style="display:none;"></audio>
+
 
 @code {
     /// <summary>
@@ -118,6 +120,7 @@
     /// References to HTML elements for images and sounds
     /// </summary>
     private ElementReference backgroundImage;
+    private ElementReference blurBackground;
     private ElementReference wallImage;
     private ElementReference powerImage;
     private ElementReference eatSound;
@@ -226,6 +229,7 @@
             await context.TranslateAsync(0, 0);
         }
 
+        await DrawEdgeBlur();
         await DrawBackground();
         await DrawWalls();
         await DrawSnakes();
@@ -235,6 +239,10 @@
         await context.EndBatchAsync();
     }
 
+    private async Task DrawEdgeBlur()
+    {
+        await context.DrawImageAsync(blurBackground, -snakeSpace!.Size, -snakeSpace.Size, snakeSpace.Size * 2, snakeSpace.Size * 2);
+    }
     /// <summary>
     /// Draws the game background
     /// </summary>
@@ -245,6 +253,7 @@
             snakeSpace.Size, snakeSpace.Size);
     }
 
+    /// <summary>
     /// Draws all walls in the game
     /// </summary>
     private async Task DrawWalls()
