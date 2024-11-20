@@ -79,9 +79,9 @@
 <img @ref="wallImage" src="images/WallSprite.png" alt="wall" style="display:none;" />
 <img @ref="powerImage" src="images/powerApple.png" alt="power" style="display:none;" />
 <img @ref="blurBackground" src="images/BlurBackground.png" alt="blur" style="display:none;" />
-<audio @ref="eatSound" src="sounds/eat.mp3" style="display:none;"></audio>
-<audio @ref="crashSound" src="sounds/crash.mp3" style="display:none;"></audio>
 
+<audio @ref="eatSound" src="sounds/crumch.mp3" style="display:none;"></audio>
+<audio @ref="crashSound" src="sounds/crash.mp3" style="display:none;"></audio>
 
 @code {
     /// <summary>
@@ -231,8 +231,7 @@
         }
         else
         {
-            // If the player's snake has died, center the view on the origin
-            await context.TranslateAsync(0, 0);
+            // TODO: If the player's snake has died...
         }
 
         await DrawEdgeBlur();
@@ -387,6 +386,7 @@
             // Remove dead powerups from the game world
             if (powerup.died)
             {
+                await PlayEatSound();
                 snakeSpace.PowerUps.Remove(powerup.power);
 
                 continue;

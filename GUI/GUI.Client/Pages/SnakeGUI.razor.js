@@ -12,3 +12,8 @@ document.addEventListener('keydown', function (event)
     theInstance.invokeMethodAsync('HandleKeyPress', event.key);
 
 });
+
+// Method to play sounds
+export function playSound(element) {
+    element.play();
+}
