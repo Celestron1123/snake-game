@@ -3,8 +3,7 @@ window.initRenderJS = (instance) => {
     window.theInstance = instance;
 };
 
-document.addEventListener('keydown', function (event)
-{
+document.addEventListener('keydown', function (event) {
     // Optionally log the key for testing
     console.log('Key pressed:', event.key);
 
@@ -14,6 +13,6 @@ document.addEventListener('keydown', function (event)
 });
 
 // Method to play sounds
-export function playSound(element) {
+window.PlayAudio = (element) => {
     element.play();
 }

@@ -80,7 +80,7 @@
 <img @ref="powerImage" src="images/powerApple.png" alt="power" style="display:none;" />
 <img @ref="blurBackground" src="images/BlurBackground.png" alt="blur" style="display:none;" />
 
-<audio @ref="eatSound" src="sounds/crumch.mp3" style="display:none;"></audio>
+<audio @ref="eatSound" src="sounds/crumch.mp3"></audio>
 <audio @ref="crashSound" src="sounds/crash.mp3" style="display:none;"></audio>
 
 @code {
@@ -387,8 +387,8 @@
             if (powerup.died)
             {
                 await PlayEatSound();
+                Console.WriteLine("ated!");
                 snakeSpace.PowerUps.Remove(powerup.power);
-
                 continue;
             }
 
@@ -398,6 +398,7 @@
                 powerup.loc.Y - halfSize,
                 powerupSize,
                 powerupSize);
+            await PlayEatSound();
         }
     }
 
@@ -416,14 +417,15 @@
     /// </summary>
     public async Task PlayEatSound()
     {
-        await JsRuntime.InvokeVoidAsync("playSound", eatSound);
+        await JsRuntime.InvokeVoidAsync("PlayAudio", eatSound);
     }
+
 
     /// <summary>
     /// Plays the sound effect for crashing
     /// </summary>
     public async Task PlayCrashSound()
     {
-        await JsRuntime.InvokeVoidAsync("playSound", crashSound);
+        await JsRuntime.InvokeVoidAsync("PlayAudio", "crashSound");
     }
 }
