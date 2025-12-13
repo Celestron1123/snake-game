@@ -65,7 +65,8 @@ The project is organized into distinct components:
 
 ## Contributors
 
-- [**Elijah Potter**](https://github.com/Celestron1123) – Developer
+- [**Elijah Potter**](https://github.com/Celestron1123)
+- [**William Ngo**](https://github.com/bigbillywilly)
 
 ## License
 
